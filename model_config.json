@@ -1,13 +1,13 @@
 {
     "features": [
-        "month",
-        "day_of_month",
-        "day_of_week",
-        "crs_dep_time",
-        "op_unique_carrier",
-        "origin",
-        "dest",
-        "distance"
+        "MONTH",
+        "DAY",
+        "DAY_OF_WEEK",
+        "SCHEDULED_DEPARTURE",
+        "AIRLINE",
+        "ORIGIN_AIRPORT",
+        "DESTINATION_AIRPORT",
+        "DISTANCE"
     ],
     "target": "is_delayed (>15 mins)",
     "l2_model_params": {

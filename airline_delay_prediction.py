@@ -60,11 +60,11 @@ def perform_eda(df):
     print("\n--- EXPLORATORY DATA ANALYSIS ---")
     
     # Create target variable if not exists (Delay > 15 mins)
-    # Using 'arr_delay' as the ground truth
-    if 'arr_delay' not in df.columns:
-        raise ValueError("Target column 'arr_delay' missing!")
+    # Using 'ARRIVAL_DELAY' as the ground truth
+    if 'ARRIVAL_DELAY' not in df.columns:
+        raise ValueError("Target column 'ARRIVAL_DELAY' missing!")
         
-    df['is_delayed'] = (df['arr_delay'] > 15).astype(int)
+    df['is_delayed'] = (df['ARRIVAL_DELAY'] > 15).astype(int)
     
     # Delay Percentage
     delay_counts = df['is_delayed'].value_counts()
@@ -85,7 +85,7 @@ def perform_eda(df):
     # Correlation Heatmap (Numerical features)
     numeric_cols = df.select_dtypes(include=[np.number]).columns
     # Filter only relevant numeric columns for heatmap to avoid clutter
-    eda_cols = ['dep_delay', 'arr_delay', 'distance', 'air_time', 'is_delayed']
+    eda_cols = ['DEPARTURE_DELAY', 'ARRIVAL_DELAY', 'DISTANCE', 'AIR_TIME', 'is_delayed']
     eda_cols = [c for c in eda_cols if c in df.columns]
     
     plt.figure(figsize=(10, 8))
@@ -105,22 +105,23 @@ def preprocess_data(df):
     
     # 1. Feature Selection
     # Drop leakage features (available only after flight)
-    leakage_cols = ['arr_delay', 'dep_delay', 'actual_elapsed_time', 'air_time', 
-                    'wheels_on', 'wheels_off', 'taxi_in', 'taxi_out', 
-                    'cancellation_code', 'carrier_delay', 'weather_delay', 
-                    'nas_delay', 'security_delay', 'late_aircraft_delay', 
-                    'dep_time', 'arr_time'] # dep_time/arr_time are actual times
+    # Drop leakage features (available only after flight)
+    leakage_cols = ['ARRIVAL_DELAY', 'DEPARTURE_DELAY', 'ELAPSED_TIME', 'AIR_TIME', 
+                    'WHEELS_ON', 'WHEELS_OFF', 'TAXI_IN', 'TAXI_OUT', 
+                    'CANCELLATION_REASON', 'AIRLINE_DELAY', 'WEATHER_DELAY', 
+                    'AIR_SYSTEM_DELAY', 'SECURITY_DELAY', 'LATE_AIRCRAFT_DELAY', 
+                    'DEPARTURE_TIME', 'ARRIVAL_TIME'] # actual times
     
     # Keep scheduled times and static info
     # Features to use:
-    # - Month, Day of Month, Day of Week (Temporal)
-    # - CRS_DEP_TIME (Scheduled Departure Time)
-    # - OP_UNIQUE_CARRIER (Airline)
-    # - ORIGIN, DEST (Airports)
+    # - MONTH, DAY, DAY_OF_WEEK (Temporal)
+    # - SCHEDULED_DEPARTURE (Scheduled Departure Time)
+    # - AIRLINE (Airline)
+    # - ORIGIN_AIRPORT, DESTINATION_AIRPORT (Airports)
     # - DISTANCE
     
-    features = ['month', 'day_of_month', 'day_of_week', 'crs_dep_time', 
-                'op_unique_carrier', 'origin', 'dest', 'distance']
+    features = ['MONTH', 'DAY', 'DAY_OF_WEEK', 'SCHEDULED_DEPARTURE', 
+                'AIRLINE', 'ORIGIN_AIRPORT', 'DESTINATION_AIRPORT', 'DISTANCE']
     
     # Ensure columns exist
     features = [c for c in features if c in df.columns]
@@ -139,14 +140,14 @@ def preprocess_data(df):
     
     # 3. Feature Engineering Pipeline
     # Numeric features: Impute median -> Standard Scaler (Lecture slides 79-82)
-    numeric_features = ['month', 'day_of_month', 'day_of_week', 'crs_dep_time', 'distance']
+    numeric_features = ['MONTH', 'DAY', 'DAY_OF_WEEK', 'SCHEDULED_DEPARTURE', 'DISTANCE']
     numeric_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='median')),
         ('scaler', StandardScaler()) # Fit on TRAIN, transform TEST
     ])
     
     # Categorical features: Impute constant -> OneHotEncoder
-    categorical_features = ['op_unique_carrier', 'origin', 'dest']
+    categorical_features = ['AIRLINE', 'ORIGIN_AIRPORT', 'DESTINATION_AIRPORT']
     categorical_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
         ('onehot', OneHotEncoder(handle_unknown='ignore')) # Handle new categories in test
@@ -245,8 +246,8 @@ def save_artifacts(l2_model, l1_model, preprocessor):
     
     # Save config
     config = {
-        'features': ['month', 'day_of_month', 'day_of_week', 'crs_dep_time', 
-                     'op_unique_carrier', 'origin', 'dest', 'distance'],
+        'features': ['MONTH', 'DAY', 'DAY_OF_WEEK', 'SCHEDULED_DEPARTURE', 
+                     'AIRLINE', 'ORIGIN_AIRPORT', 'DESTINATION_AIRPORT', 'DISTANCE'],
         'target': 'is_delayed (>15 mins)',
         'l2_model_params': l2_model.named_steps['classifier'].get_params(),
         'l1_model_params': l1_model.named_steps['classifier'].get_params()
@@ -296,9 +297,9 @@ def main():
         feature_names = (l2_model.named_steps['preprocessor']
                          .transformers_[1][1] # categorical transformer
                          .named_steps['onehot']
-                         .get_feature_names_out(['op_unique_carrier', 'origin', 'dest']))
+                         .get_feature_names_out(['AIRLINE', 'ORIGIN_AIRPORT', 'DESTINATION_AIRPORT']))
         
-        numeric_features = ['month', 'day_of_month', 'day_of_week', 'crs_dep_time', 'distance']
+        numeric_features = ['MONTH', 'DAY', 'DAY_OF_WEEK', 'SCHEDULED_DEPARTURE', 'DISTANCE']
         all_features = np.concatenate([numeric_features, feature_names])
         
         l2_importance = get_feature_importance(l2_model, all_features)

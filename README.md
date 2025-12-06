@@ -50,12 +50,17 @@ Follow this exact sequence of commands to set up and run the project:
     pip install -r requirements.txt
     ```
 
-5.  **Run the prediction system**:
+5.  **Generate Synthetic Data** (Required for first run):
+    ```bash
+    python generate_data.py
+    ```
+
+6.  **Run the prediction system** (Train Models):
     ```bash
     python airline_delay_prediction.py
     ```
 
-6.  **Run the GUI Simulation**:
+7.  **Run the GUI Simulation**:
     ```bash
     python delay_prediction_gui.py
     ```

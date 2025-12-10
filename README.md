@@ -1,29 +1,24 @@
 # Airline Delay Prediction System
 
 ## Overview
-This project implements a Machine Learning system to predict flight delays using Logistic Regression. It compares two regularization techniques:
-- **L2 Regularization (Ridge)**: Standard regularization that penalizes large coefficients.
-- **L1 Regularization (Lasso)**: Regularization that encourages sparsity (feature selection).
-
-The system is built for an academic project based on "lect_02_03_linear_models.pdf" and uses the `filtered_flight_data.csv` dataset.
+This project implements a Machine Learning system to predict flight delays using Logistic Regression. It employs a **Hybrid Intelligence** approach, combining a rigorously trained statistical model with a rule-based expert system to account for real-time factors (like weather) missing from historical datasets.
 
 ## Project Structure
 - `airline_delay_prediction.py`: Main Python script for data processing, training, and evaluation.
 - `delay_prediction_gui.py`: Interactive GUI for flight simulation and analysis.
+- `prediction_utils.py`: **[NEW]** Shared utility module containing the core prediction and explanation logic.
 - `filtered_flight_data.csv`: Dataset file (must be present in the directory).
 - `generate_data.py`: Script to create the synthetic dataset if missing.
 - `requirements.txt`: List of Python dependencies.
 - `README.md`: This file.
 - **Artifacts (Generated after training):**
-    - `logistic_l2_model.pkl`: Trained L2 model.
-    - `logistic_l1_model.pkl`: Trained L1 model.
+    - `logistic_l2_model.pkl`: Trained L2 model (Backup).
+    - `logistic_l1_model.pkl`: Trained L1 model (Active Core).
     - `feature_scaler.pkl`: Scaler for data normalization.
     - `model_config.json`: Model configuration and feature names.
     - `eda_delay_distribution.png`: Exploratory Data Analysis visualization.
     - `eda_correlation_heatmap.png`: Feature correlation heatmap.
     - `model_roc_comparison.png`: ROC Curve comparison plot.
-    - `model_confusion_matrices.png`: Confusion matrices for both models.
-    - `feature_importance_l2.png`: Visual ranking of top features.
 
 ## Requirements
 - Python 3.8+
@@ -70,14 +65,12 @@ Follow this exact sequence of commands to set up and run the project:
     python delay_prediction_gui.py
     ```
     - **Dashboard View**: View flight scenarios with the "Cool Blue" professional theme.
-    - **Real-world Heuristics**: The system applies logic to simulate weather impacts missing from the raw dataset:
+    - **Hybrid Logic**: The system applies heuristic logic to simulate weather impacts:
         - **Snow**: +30% Delay Risk
         - **Rain**: +15% Delay Risk
-        - **Storm**: +45% Delay Risk
     - **Interactive Analysis**: Select a flight and click **"Predict"** to open the **Prediction Analysis Popup**.
-    - **Explainability**: The popup breaks down the *why* behind a delay:
-        - **Top Factors**: Ranked list of features contributing to the decision.
-        - **Impact Score**: Shows exactly how much each factor (Weather, Airline, Time) pushes the probability up or down.
+    - **Explainability**: The popup breaks down the *why* behind a delay using **Marginal Probability Contribution**:
+        - **Unified Metrics**: Statistical factors (like airline history) and heuristic factors (like snow) are both converted to **Probability Impact %**, allowing for a direct apples-to-apples comparison.
 
 8.  **View the results**:
     - Check the terminal output for the model comparison report.
@@ -97,19 +90,15 @@ The script will:
 This project demonstrates several advanced Applied AI concepts:
 
 - **Regularization Strategy**:
-    - **L2 (Ridge)** is used to handle multicollinearity (e.g., correlations between Distance and Air Time) and prevent overfitting by distributing weights.
-    - **L1 (Lasso)** is implemented to perform automatic *feature selection*, zeroing out irrelevant features to simplify the model.
+    - **L1 (Lasso)** is used as the primary model to perform automatic *feature selection*, zeroing out irrelevant features to simplify the model.
 
-- **Class Imbalance Handling**:
-    - Real-world flight data is heavily imbalanced (~80% on-time). The model uses `class_weight='balanced'` to adjust the loss function, ensuring the model prioritizes detecting potential delays rather than just maximizing trivial accuracy.
+- **Hybrid AI Architecture**:
+    - Combines a **Data-Driven Model** (Logistic Regression) for historical patterns with a **Rule-Based System** (Heuristics) for dynamic external factors like weather.
 
 - **Explainable AI (XAI)**:
-    - The GUI includes a custom reasoning engine that calculates the dot product of the individual flight's data vector and the model's coefficients ($w \cdot x$).
-    - This allows for precise, per-flight explanations (e.g., "This flight is delayed specifically because of the Snow storm and the congestion at ORD," rather than just a generic probability).
+    - **Marginal Probability Contribution**: instead of showing raw coefficients (Log-Odds), the system calculates the approximate change in probability ($\beta_i x_i \times p(1-p)$) caused by each feature. This makes the explanation intuitive for non-technical users (e.g., "Saturday travel increased risk by 5.2%").
 
 ## Model Details
 - **Algorithm**: Logistic Regression (Sigmoid activation, Cross-Entropy Loss).
 - **Optimization**: Stochastic Gradient Descent (solver='saga').
-- **Regularization**:
-    - L2: $\lambda ||w||^2_2$
-    - L1: $\lambda ||w||_1$
+- **Regularization**: L1: $\lambda ||w||_1$

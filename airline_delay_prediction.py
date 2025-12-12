@@ -346,7 +346,37 @@ def main():
         plt.title('ROC Curve Comparison')
         plt.legend()
         plt.savefig('model_roc_comparison.png')
-        print("\nSaved 'model_roc_comparison.png'")
+        print("Saved 'model_roc_comparison.png'")
+
+        # Confusion Matrices
+        fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+        
+        # L2
+        cm_l2 = confusion_matrix(y_test, l2_pred)
+        sns.heatmap(cm_l2, annot=True, fmt='d', cmap='Blues', ax=axes[0])
+        axes[0].set_title('L2 (Ridge) Confusion Matrix')
+        axes[0].set_xlabel('Predicted')
+        axes[0].set_ylabel('Actual')
+        
+        # L1
+        cm_l1 = confusion_matrix(y_test, l1_pred)
+        sns.heatmap(cm_l1, annot=True, fmt='d', cmap='Blues', ax=axes[1])
+        axes[1].set_title('L1 (Lasso) Confusion Matrix')
+        axes[1].set_xlabel('Predicted')
+        axes[1].set_ylabel('Actual')
+        
+        plt.tight_layout()
+        plt.savefig('model_confusion_matrices.png')
+        print("Saved 'model_confusion_matrices.png'")
+
+        # Feature Importance (L2)
+        plt.figure(figsize=(10, 8))
+        top_features = l2_importance.head(20)
+        sns.barplot(x='Coefficient', y='Feature', data=top_features, palette='viridis')
+        plt.title('Top 20 Features (L2 Model)')
+        plt.tight_layout()
+        plt.savefig('feature_importance_l2.png')
+        print("Saved 'feature_importance_l2.png'")
         
         # 10. Sample Prediction
         sample_flight = X_test.iloc[0].to_dict()
